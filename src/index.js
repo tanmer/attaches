@@ -443,12 +443,14 @@ export default class AttachesTool {
    * Stores all Tool's data
    * @param {AttachesToolData} data
    */
-  set data({ file, title }) {
-    this._data = Object.assign({}, {
+  set data(data) {
+    const { file, title } = data;
+
+    this._data = Object.assign({}, data, {
       file: {
         url: (file && file.url) || this._data.file.url,
         name: (file && file.name) || this._data.file.name,
-        extension: (file && file.extension) || this._data.file.extension,
+        type: (file && file.type) || this._data.file.type,
         size: (file && file.size) || this._data.file.size
       },
       title: title || this._data.title
