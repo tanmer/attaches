@@ -1,10 +1,34 @@
 import './index.css';
-import Uploader from './uploader';
 import Icon from './svg/toolbox.svg';
 import FileIcon from './svg/standard.svg';
 import CustomFileIcon from './svg/custom.svg';
 import DownloadIcon from './svg/arrow-download.svg';
+import ajax from '@codexteam/ajax';
 const LOADER_TIMEOUT = 500;
+
+/*
+ * uploaderAdapter 文件上传类
+ * 必须支持以下参数及回调方法
+ *
+ * new this.UploaderAdapter({
+ *   file: file,
+ *   beforeSend: function (params) {
+ *     console.log('beforeSend', params);
+ *   },
+ *   progress: function (params) {
+ *     console.log('progress', params);
+ *   },
+ *   success: function (params) {
+ *     console.log('success', params);
+ *   },
+ *   failed: function (params) {
+ *     console.log('failed', params);
+ *   },
+ *   complete: function (params) {
+ *     console.log('complete', params);
+ *   }
+ * });
+ */
 
 /**
  * @typedef {object} AttachesToolData
@@ -75,6 +99,9 @@ export default class AttachesTool {
       title: ''
     };
 
+    // TODO ADD default uploader
+    this.UploaderAdapter = config.uploaderAdapter;
+
     this.config = {
       endpoint: config.endpoint || '',
       field: config.field || 'file',
@@ -84,15 +111,6 @@ export default class AttachesTool {
     };
 
     this.data = data;
-
-    /**
-     * Module for files uploading
-     */
-    this.uploader = new Uploader({
-      config: this.config,
-      onUpload: (response) => this.onUpload(response),
-      onError: (error) => this.uploadingFailed(error)
-    });
 
     this.enableFileUpload = this.enableFileUpload.bind(this);
   }
@@ -238,32 +256,79 @@ export default class AttachesTool {
    * Allow to upload files on button click
    */
   enableFileUpload() {
-    this.uploader.uploadSelectedFile({
-      onPreview: () => {
-        this.nodes.wrapper.classList.add(this.CSS.wrapperLoading, this.CSS.loader);
+    const self = this;
+
+    ajax.selectFiles({
+      accept: self.config.types || '*'
+    }).then((fileList) => {
+      // TODO 单文件上传
+      const file = fileList && fileList[0];
+
+      self.onStartUploadFile(file);
+    });
+  }
+
+  /**
+   *
+   * start upload file
+   */
+  onStartUploadFile(file) {
+    if (!(file && file.size > 0)) {
+      this.uploadingFailed(this.config.errorMessage);
+      console.error('file error');
+      return;
+    }
+    if (!this.UploaderAdapter) {
+      this.uploadingFailed(this.config.errorMessage);
+      console.error('uploader adapter is not found');
+      return;
+    }
+    this.onPreview();
+
+    // send file
+    const self = this;
+
+    new this.UploaderAdapter({ // eslint-disable-line
+      file: file,
+      progress: function (params) {
+        console.log('progress', params);
+      },
+      success: function (params) {
+        self.onUpload(params, file);
+      },
+      failed: function (params) {
+        self.uploadingFailed(this.config.errorMessage);
       }
     });
+  }
+
+  /**
+   * show loading
+   */
+  onPreview() {
+    this.nodes.wrapper.classList.add(this.CSS.wrapperLoading, this.CSS.loader);
   }
 
   /**
    * File uploading callback
    * @param {UploadResponseFormat} response
    */
-  onUpload(response) {
-    const body = response.body;
+  onUpload(response, file) {
+    if (response && response.url) {
+      const url = response.url;
 
-    if (body.success && body.file) {
-      const { url, name, size } = body.file;
+      delete response.url;
 
       this.data = {
         file: {
-          url,
-          extension: name.split('.').pop(),
-          name,
-          size
+          url: url,
+          type: file.type,
+          name: file.name,
+          size: file.size
         },
-        title: name
+        title: file.name
       };
+      Object.assign(this.data, response);
 
       this.nodes.button.remove();
       this.showFileData();
@@ -279,7 +344,8 @@ export default class AttachesTool {
    * Handles uploaded file's extension and appends corresponding icon
    */
   appendFileIcon() {
-    const extension = this.data.file.extension || '';
+    const fileInfo = this.data.file || {};
+    const extension = (fileInfo.name || '').split('.').pop() || '';
     const extensionColor = this.EXTENSIONS[extension];
 
     const fileIcon = this.make('div', this.CSS.fileIcon, {

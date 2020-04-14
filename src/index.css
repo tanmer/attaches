@@ -26,8 +26,8 @@
 
       &::before {
         position: absolute;
-        bottom: 7px;
-        left: 8.5px;
+        bottom: 1em;
+        left: 0.65em;
         font-size: 8px;
         font-weight: 900;
         text-transform: uppercase;
