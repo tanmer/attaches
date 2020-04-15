@@ -394,10 +394,10 @@ export default class AttachesTool {
       const fileSize = this.make('div', this.CSS.size);
 
       if (Math.log10(+size) >= 6) {
-        sizePrefix = 'MiB';
+        sizePrefix = 'MB';
         formattedSize = size / Math.pow(2, 20);
       } else {
-        sizePrefix = 'KiB';
+        sizePrefix = 'KB';
         formattedSize = size / Math.pow(2, 10);
       }
 

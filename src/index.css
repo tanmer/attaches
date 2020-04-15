@@ -27,13 +27,19 @@
       &::before {
         position: absolute;
         bottom: 1em;
-        left: 0.65em;
+        left: 0px;
+        width: 100%;
+        padding: 0px 2px;
+        white-space: nowrap;
         font-size: 8px;
+        overflow: hidden;
         font-weight: 900;
         text-transform: uppercase;
         background: #fff;
         line-height: 150%;
         content: attr(data-extension);
+        transform: scale(.8);
+        text-align: center;
       }
 
       svg {
