@@ -4,7 +4,7 @@ Attaches Tool for the [Editor.js](https://codex.so/editor).
 
 This tool allows you to attach files to your articles.
 
-![Example](https://capella.pics/ddfa3793-f478-4d8c-993c-753c23a8890c.jpg)
+![Example](https://capella.pics/7b63cffe-9214-40f4-9009-0637970a4630.jpg)
 
 ## Get the package
 You can get the package using any of these ways.
@@ -31,7 +31,7 @@ const AttachesTool = require('@editorjs/attaches');
 
 You can load specific version of package from [jsDelivr CDN](https://www.jsdelivr.com/package/npm/@editorjs/attaches).
 
-`https://cdn.jsdelivr.net/npm/@editorjs/attaches@1.0.0`
+`https://cdn.jsdelivr.net/npm/@editorjs/attaches@latest`
 
 Then require this script on page with Editor.js through the `<script src=""></script>` tag.
 
