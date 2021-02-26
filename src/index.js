@@ -7,10 +7,10 @@ import ajax from '@codexteam/ajax';
 const LOADER_TIMEOUT = 500;
 
 /*
- * uploaderAdapter 文件上传类
+ * uploaderAdapter 文件上传函数
  * 必须支持以下参数及回调方法
  *
- * new this.UploaderAdapter({
+ * this.UploaderAdapter({
  *   file: file,
  *   beforeSend: function (params) {
  *     console.log('beforeSend', params);
@@ -103,7 +103,6 @@ export default class AttachesTool {
     this.UploaderAdapter = config.uploaderAdapter;
 
     this.config = {
-      endpoint: config.endpoint || '',
       field: config.field || 'file',
       types: config.types || '*',
       buttonText: config.buttonText || 'Select file to upload',
@@ -287,8 +286,7 @@ export default class AttachesTool {
 
     // send file
     const self = this;
-
-    new this.UploaderAdapter({ // eslint-disable-line
+    this.UploaderAdapter({ // eslint-disable-line
       file: file,
       progress: function (params) {
         console.log('progress', params);
@@ -297,7 +295,7 @@ export default class AttachesTool {
         self.onUpload(params, file);
       },
       failed: function (params) {
-        self.uploadingFailed(this.config.errorMessage);
+        self.uploadingFailed(self.config.errorMessage);
       }
     });
   }
