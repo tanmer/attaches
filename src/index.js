@@ -85,8 +85,9 @@ export default class AttachesTool {
    * @param {Object} config
    * @param {API} api
    */
-  constructor({ data, config, api }) {
+  constructor({ data, config, api, readOnly }) {
     this.api = api;
+    this.readOnly = readOnly;
 
     this.nodes = {
       wrapper: null,
@@ -112,6 +113,15 @@ export default class AttachesTool {
     this.data = data;
 
     this.enableFileUpload = this.enableFileUpload.bind(this);
+  }
+
+  /**
+   * Notify core that read-only mode is supported
+   *
+   * @returns {boolean}
+   */
+  static get isReadOnlySupported() {
+    return true;
   }
 
   /**
@@ -255,15 +265,20 @@ export default class AttachesTool {
    * Allow to upload files on button click
    */
   enableFileUpload() {
-    const self = this;
+    if (this.readOnly) return;
+
+    if (this.loading) return;
+    this.loading = true;
 
     ajax.selectFiles({
-      accept: self.config.types || '*'
+      accept: this.config.types || '*'
     }).then((fileList) => {
       // TODO 单文件上传
       const file = fileList && fileList[0];
 
-      self.onStartUploadFile(file);
+      this.onStartUploadFile(file);
+    }).finally(() => {
+      this.loading = false;
     });
   }
 
@@ -286,6 +301,7 @@ export default class AttachesTool {
 
     // send file
     const self = this;
+
     this.UploaderAdapter({ // eslint-disable-line
       file: file,
       progress: function (params) {
@@ -379,7 +395,7 @@ export default class AttachesTool {
 
     if (title) {
       this.nodes.title = this.make('div', this.CSS.title, {
-        contentEditable: true
+        contentEditable: !this.readOnly
       });
 
       this.nodes.title.textContent = title;
@@ -406,14 +422,18 @@ export default class AttachesTool {
 
     this.nodes.wrapper.appendChild(fileInfo);
 
-    const downloadIcon = this.make('a', this.CSS.downloadButton, {
+    const downloadLinkDom = this.make('a', this.CSS.downloadButton, {
       innerHTML: DownloadIcon,
       href: url,
       target: '_blank',
       rel: 'nofollow noindex noreferrer'
     });
 
-    this.nodes.wrapper.appendChild(downloadIcon);
+    if (this.readOnly) {
+      downloadLinkDom.onclick = () => false;
+    }
+
+    this.nodes.wrapper.appendChild(downloadLinkDom);
   }
 
   /**
